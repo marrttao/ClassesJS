@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoo Management - Clean Architecture Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .output {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-line;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .architecture-info {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zoo Management System - Clean Architecture</h1>
+        
+        <div class="architecture-info">
+            <h3>Clean Architecture Layers:</h3>
+            <ul>
+                <li><strong>Entities:</strong> Animal, Dog, Cat, Parrot, Zoo, Zookeeper</li>
+                <li><strong>Use Cases:</strong> ZooManagementUseCase, FeedingUseCase</li>
+                <li><strong>Interfaces:</strong> ZooRepository, Logger</li>
+                <li><strong>Infrastructure:</strong> JsonZooRepository, ConsoleLogger</li>
+            </ul>
+        </div>
+
+        <div>
+            <button onclick="runDemo()">Run Demo</button>
+            <button onclick="clearOutput()">Clear Output</button>
+        </div>
+        
+        <div id="output" class="output"></div>
+    </div>
+
+    <script>
+        // Simple browser-compatible implementation of the clean architecture
+        
+        // Infrastructure Layer - Logger Implementation
+        class BrowserLogger {
+            constructor(outputElement) {
+                this.outputElement = outputElement;
+            }
+            
+            info(message) {
+                this.log(message);
+            }
+            
+            error(message) {
+                this.log(`ERROR: ${message}`);
+            }
+            
+            warn(message) {
+                this.log(`WARNING: ${message}`);
+            }
+            
+            log(message) {
+                this.outputElement.textContent += message + '\n';
+                console.log(message);
+            }
+        }
+
+        // Entities Layer
+        class Animal {
+            constructor(name, age) {
+                if (!name || !age) {
+                    throw new Error('Name and age are required for an animal');
+                }
+                this.name = name;
+                this.age = age;
+            }
+
+            makeSound() {
+                return "...";
+            }
+
+            getName() {
+                return this.name;
+            }
+
+            getAge() {
+                return this.age;
+            }
+
+            getType() {
+                return this.constructor.name;
+            }
+
+            toJSON() {
+                return {
+                    type: this.constructor.name,
+                    name: this.name,
+                    age: this.age
+                };
+            }
+        }
+
+        class Dog extends Animal {
+            makeSound() {
+                return "Woof!";
+            }
+
+            getFood() {
+                return "meat";
+            }
+        }
+
+        class Cat extends Animal {
+            makeSound() {
+                return "Meow!";
+            }
+
+            getFood() {
+                return "fish";
+            }
+        }
+
+        class Parrot extends Animal {
+            makeSound() {
+                return "Hi!";
+            }
+
+            getFood() {
+                return "seeds";
+            }
+        }
+
+        class Zoo {
+            constructor() {
+                this.animals = [];
+            }
+
+            addAnimal(animal) {
+                if (!(animal instanceof Animal)) {
+                    throw new Error("Only animals can be added to the zoo");
+                }
+                this.animals.push(animal);
+            }
+
+            removeAnimal(animal) {
+                const index = this.animals.indexOf(animal);
+                if (index === -1) {
+                    throw new Error("Animal not found in zoo");
+                }
+                this.animals.splice(index, 1);
+            }
+
+            getAnimals() {
+                return [...this.animals];
+            }
+
+            hasAnimal(animal) {
+                return this.animals.includes(animal);
+            }
+        }
+
+        class Zookeeper {
+            constructor(name) {
+                if (!name) {
+                    throw new Error('Name is required for a zookeeper');
+                }
+                this.name = name;
+                this.allowedToFeed = ['Dog', 'Cat'];
+            }
+
+            getName() {
+                return this.name;
+            }
+
+            canFeed(animal) {
+                return this.allowedToFeed.includes(animal.getType());
+            }
+        }
+
+        // Use Cases Layer
+        class ZooManagementUseCase {
+            constructor(logger) {
+                this.logger = logger;
+            }
+
+            addAnimalToZoo(zoo, animal) {
+                try {
+                    zoo.addAnimal(animal);
+                    this.logger.info(`Added ${animal.getName()} the ${animal.getType()} to the zoo`);
+                } catch (error) {
+                    this.logger.error(`Failed to add animal: ${error.message}`);
+                    throw error;
+                }
+            }
+
+            transferAnimal(animal, sourceZoo, targetZoo) {
+                try {
+                    if (!sourceZoo.hasAnimal(animal)) {
+                        throw new Error('Animal not found in source zoo');
+                    }
+                    
+                    sourceZoo.removeAnimal(animal);
+                    targetZoo.addAnimal(animal);
+                    
+                    this.logger.info(`Transferred ${animal.getName()} the ${animal.getType()} between zoos`);
+                } catch (error) {
+                    this.logger.error(`Failed to transfer animal: ${error.message}`);
+                    throw error;
+                }
+            }
+
+            makeAllAnimalSounds(zoo) {
+                const animals = zoo.getAnimals();
+                animals.forEach(animal => {
+                    const sound = animal.makeSound();
+                    this.logger.info(sound);
+                });
+            }
+        }
+
+        class FeedingUseCase {
+            constructor(logger) {
+                this.logger = logger;
+            }
+
+            feedAllAnimals(zoo) {
+                const animals = zoo.getAnimals();
+                animals.forEach(animal => {
+                    const food = animal.getFood ? animal.getFood() : 'generic food';
+                    this.logger.info(`${animal.getName()} the ${animal.getType().toLowerCase()} is eating ${food}.`);
+                });
+            }
+
+            zookeeperFeedAnimals(zookeeper, zoo) {
+                const animals = zoo.getAnimals();
+                animals.forEach(animal => {
+                    if (zookeeper.canFeed(animal)) {
+                        const food = animal.getFood ? animal.getFood() : 'food';
+                        this.logger.info(`${zookeeper.getName()} is feeding ${animal.getName()} the ${animal.getType().toLowerCase()} ${food}.`);
+                    } else {
+                        this.logger.warn(`${zookeeper.getName()} cannot feed ${animal.getName()}.`);
+                    }
+                });
+            }
+        }
+
+        // Application Factory for Dependency Injection
+        class ApplicationFactory {
+            constructor(outputElement) {
+                this.logger = new BrowserLogger(outputElement);
+                this.zooManagementUseCase = new ZooManagementUseCase(this.logger);
+                this.feedingUseCase = new FeedingUseCase(this.logger);
+            }
+
+            getZooManagementUseCase() {
+                return this.zooManagementUseCase;
+            }
+
+            getFeedingUseCase() {
+                return this.feedingUseCase;
+            }
+
+            createZoo() {
+                return new Zoo();
+            }
+
+            createDog(name, age) {
+                return new Dog(name, age);
+            }
+
+            createCat(name, age) {
+                return new Cat(name, age);
+            }
+
+            createParrot(name, age) {
+                return new Parrot(name, age);
+            }
+
+            createZookeeper(name) {
+                return new Zookeeper(name);
+            }
+        }
+
+        // Demo function
+        function runDemo() {
+            const outputElement = document.getElementById('output');
+            outputElement.textContent = '';
+
+            const app = new ApplicationFactory(outputElement);
+            
+            // Get use cases
+            const zooManagement = app.getZooManagementUseCase();
+            const feeding = app.getFeedingUseCase();
+            
+            // Create entities
+            const zoo1 = app.createZoo();
+            const zoo2 = app.createZoo();
+            
+            const dog = app.createDog("Buddy", 5);
+            const cat = app.createCat("Whiskers", 3);
+            const parrot = app.createParrot("Polly", 2);
+            
+            const zookeeper = app.createZookeeper("John");
+            
+            app.logger.info("=== Zoo Management System (Clean Architecture) ===\n");
+            
+            // Add animals to zoo
+            app.logger.info("1. Adding animals to zoo:");
+            zooManagement.addAnimalToZoo(zoo1, dog);
+            zooManagement.addAnimalToZoo(zoo1, cat);
+            zooManagement.addAnimalToZoo(zoo1, parrot);
+            
+            app.logger.info("\n2. All animals making sounds:");
+            zooManagement.makeAllAnimalSounds(zoo1);
+            
+            app.logger.info("\n3. Zoo feeding all animals:");
+            feeding.feedAllAnimals(zoo1);
+            
+            app.logger.info("\n4. Zookeeper feeding animals:");
+            feeding.zookeeperFeedAnimals(zookeeper, zoo1);
+            
+            app.logger.info("\n5. Transferring cat to second zoo:");
+            zooManagement.transferAnimal(cat, zoo1, zoo2);
+            
+            app.logger.info("\n6. Animals in zoo1 after transfer:");
+            zooManagement.makeAllAnimalSounds(zoo1);
+            
+            app.logger.info("\n7. Animals in zoo2 after transfer:");
+            zooManagement.makeAllAnimalSounds(zoo2);
+            
+            app.logger.info("\n=== Demo Complete ===");
+            app.logger.info("Check the browser console for additional output!");
+        }
+
+        function clearOutput() {
+            document.getElementById('output').textContent = '';
+        }
+    </script>
+</body>
+</html>

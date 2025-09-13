@@ -1,0 +1,32 @@
+{
+  "name": "zoo-management-system",
+  "version": "1.0.0",
+  "description": "A Zoo Management System demonstrating Clean Architecture principles in JavaScript",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "zoo",
+    "management",
+    "clean-architecture",
+    "javascript",
+    "oop",
+    "polymorphism"
+  ],
+  "author": "marrttao",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marrttao/ClassesJS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/marrttao/ClassesJS/issues"
+  },
+  "homepage": "https://github.com/marrttao/ClassesJS#readme"
+}
